@@ -8,7 +8,7 @@ uint waitTimeMs = 100;
 [Setting category="General" name="Enabled"]
 bool S_Enabled = true;
 
-[Setting category="General" name="Show UI when hidden" description="Uses 'Dev' calls and may crash the game when there's an update!"]
+[Setting category="General" name="Try showing UI when hidden" description="May crash the game when there's an update!"]
 bool S_ShowUI = false;
 
 void RenderMenu() {
