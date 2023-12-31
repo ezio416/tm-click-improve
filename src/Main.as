@@ -45,6 +45,10 @@ void Loop(CTrackMania@ App) {
     if (Config is null || Config.UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
         return;
 
+    CTrackManiaNetworkServerInfo@ ServerInfo = cast<CTrackManiaNetworkServerInfo@>(Network.ServerInfo);
+    if (!ServerInfo.CurGameModeStr.EndsWith("_Local"))
+        return;
+
     for (uint i = 0; i < Playground.UILayers.Length; i++) {
         CGameUILayer@ Layer = Playground.UILayers[i];
         if (Layer is null)
