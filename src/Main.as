@@ -47,7 +47,7 @@ void Loop(CTrackMania@ App) {
         if (Layer is null)
             continue;
 
-        if (Layer.ManialinkPage.Contains("UIModule_PlayMap_EndRaceMenu")) {
+        if (Layer.ManialinkPage.Contains("UIModule_PlayMap_EndRaceMenu") || Layer.ManialinkPage.Contains("UIModule_Campaign_EndRaceMenu")) {
             if (Layer.LocalPage is null)
                 return;
 
