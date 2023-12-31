@@ -46,7 +46,7 @@ void Loop(CTrackMania@ App) {
         return;
 
     CTrackManiaNetworkServerInfo@ ServerInfo = cast<CTrackManiaNetworkServerInfo@>(Network.ServerInfo);
-    if (!ServerInfo.CurGameModeStr.EndsWith("_Local"))
+    if (ServerInfo is null || !ServerInfo.CurGameModeStr.EndsWith("_Local"))
         return;
 
     for (uint i = 0; i < Playground.UILayers.Length; i++) {
