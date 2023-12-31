@@ -92,6 +92,9 @@ void Loop(CTrackMania@ App) {
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 // working as of game version 2023-11-24_17_34
 void SetUIVisibility(CTrackMania@ App, bool shown) {
+    string action = (shown ? "show" : "hid") + "ing game UI";
+    trace(action);
+
     uint InterfaceUIOffset = 0x158;
     uint UIVisKeyOffset = 0x1C;
     uint UIVisOffset = 0x3C;
@@ -109,5 +112,10 @@ void SetUIVisibility(CTrackMania@ App, bool shown) {
 
     try {
         App.CurrentPlayground.Interface.InterfaceRoot.Childs[2].IsVisible = shown;
-    } catch { }
+    } catch {
+        trace("partial success " + action);
+        return;
+    }
+
+    trace("success " + action);
 }
