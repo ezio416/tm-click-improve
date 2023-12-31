@@ -8,6 +8,9 @@ uint waitTimeMs = 100;
 [Setting category="General" name="Enabled"]
 bool S_Enabled = true;
 
+[Setting category="General" name="Show UI when hidden" description="Uses 'Dev' calls and may crash the game when there's an update!"]
+bool S_ShowUI = false;
+
 void RenderMenu() {
     if (UI::MenuItem(title, "", S_Enabled))
         S_Enabled = !S_Enabled;
@@ -47,7 +50,7 @@ void Loop(CTrackMania@ App) {
         if (Layer is null)
             continue;
 
-        if (Layer.ManialinkPage.Contains("UIModule_PlayMap_EndRaceMenu") || Layer.ManialinkPage.Contains("UIModule_Campaign_EndRaceMenu")) {
+        if (Layer.ManialinkPage.Contains("EndRaceMenu")) {
             if (Layer.LocalPage is null)
                 return;
 
@@ -62,6 +65,9 @@ void Loop(CTrackMania@ App) {
             bool uiWasHidden = false;
 
             if (!UI::IsGameUIVisible()) {
+                if (!S_ShowUI)
+                    return;
+
                 uiWasHidden = true;
                 SetUIVisibility(App, true);
             }
