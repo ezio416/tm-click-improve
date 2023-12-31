@@ -8,7 +8,7 @@ uint waitTimeMs = 100;
 [Setting category="General" name="Enabled"]
 bool S_Enabled = true;
 
-[Setting category="General" name="Try showing UI when hidden" description="May crash the game when there's an update!"]
+[Setting category="General" name="Try showing game UI when hidden" description="\\$F70May crash the game when there's an update! \\$GIf disabled, the plugin will work when you show the UI yourself."]
 bool S_ShowUI = false;
 
 void RenderMenu() {
