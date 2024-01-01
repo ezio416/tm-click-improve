@@ -3,26 +3,40 @@
 
 uint64 lastClick = 0;
 string title = "\\$F70" + Icons::Kenney::Cursor + "\\$G Click Improve";
+string version;
+bool versionSafe = false;
+uint versionSafeRetries = 0;
 uint waitTimeMs = 100;
 
 [Setting category="General" name="Enabled"]
 bool S_Enabled = true;
 
-[Setting category="General" name="Try showing game UI when hidden" description="\\$F70May crash the game when there's an update! \\$GIf disabled, the plugin will work when you show the UI yourself."]
+[Setting category="General" name="Try showing game UI when hidden" description="If disabled, the plugin will work when you show the UI yourself. If this doesn't work after a game update, wait for the plugin author (\\$1D4Ezio\\$G) to confirm it doesn't crash the game."]
 bool S_ShowUI = false;
 
+[Setting category="General" name="Override game version check (unsafe)" description="If you don't want to wait for the plugin author to test the current game version, try this setting. \\$FA0It may crash your game."]
+bool S_OverrideCheck = false;
+
 void RenderMenu() {
-    if (UI::MenuItem(title, "", S_Enabled))
+    if (UI::MenuItem(title + (versionSafe ? "" : "\\$AAA (disabled)"), "", S_Enabled))
         S_Enabled = !S_Enabled;
 }
 
 void Main() {
+    versionSafe = GameVersionSafe();
+    S_OverrideCheck = false;
+
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
 
     while (true) {
         Loop(App);
         yield();
     }
+}
+
+void OnSettingsChanged() {
+    if (S_OverrideCheck)
+        versionSafe = true;
 }
 
 void Loop(CTrackMania@ App) {
@@ -69,7 +83,7 @@ void Loop(CTrackMania@ App) {
             bool uiWasHidden = false;
 
             if (!UI::IsGameUIVisible()) {
-                if (!S_ShowUI)
+                if (!S_ShowUI || !versionSafe)
                     return;
 
                 uiWasHidden = true;
@@ -94,7 +108,6 @@ void Loop(CTrackMania@ App) {
 }
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
-// working as of game version 2023-11-24_17_34
 void SetUIVisibility(CTrackMania@ App, bool shown) {
     string action = (shown ? "show" : "hid") + "ing game UI";
     trace(action);
@@ -122,4 +135,61 @@ void SetUIVisibility(CTrackMania@ App, bool shown) {
     }
 
     trace("success " + action);
+}
+
+bool GameVersionSafe() {
+    string[] knownGood = {
+        "2023-11-24_17_34"
+    };
+
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    version = App.SystemPlatform.ExeVersion;
+
+    if (knownGood.Find(version) > -1)
+        return true;
+
+    return GetStatusFromOpenplanet();
+}
+
+// courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
+bool GetStatusFromOpenplanet() {
+    trace("starting GetStatusFromOpenplanet");
+
+    Net::HttpRequest@ req = Net::HttpGet("https://openplanet.dev/plugin/clickimprove/config/version-compat");
+    while (!req.Finished())
+        yield();
+
+    if (req.ResponseCode() != 200) {
+        warn("GetStatusFromOpenplanet: code: " + req.ResponseCode() + "; error: " + req.Error() + "; body: " + req.String());
+        return RetryGetStatus();
+    }
+
+    try {
+        Json::Value@ j = Json::Parse(req.String());
+        string myVer = Meta::ExecutingPlugin().Version;
+
+        if (!j.HasKey(myVer) || j[myVer].GetType() != Json::Type::Object)
+            return false;
+
+        return j[myVer].HasKey(version);
+    } catch {
+        warn("GetStatusFromOpenplanet exception: " + getExceptionInfo());
+        return RetryGetStatus();
+    }
+}
+
+// courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
+bool RetryGetStatus() {
+    trace("retrying GetStatusFromOpenplanet in 1000 ms");
+
+    sleep(1000);
+
+    if (versionSafeRetries++ > 5) {
+        warn("not retrying GetStatusFromOpenplanet anymore, too many failures");
+        return false;
+    }
+
+    trace("retrying GetStatusFromOpenplanet...");
+
+    return GameVersionSafe();
 }
