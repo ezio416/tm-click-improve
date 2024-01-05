@@ -1,5 +1,5 @@
 // c 2023-12-30
-// m 2023-12-31
+// m 2024-01-05
 
 uint64 lastClick = 0;
 string title = "\\$F70" + Icons::Kenney::Cursor + "\\$G Click Improve";
@@ -51,11 +51,11 @@ void Loop(CTrackMania@ App) {
     if (Network is null)
         return;
 
-    CGameManiaAppPlayground@ Playground = cast<CGameManiaAppPlayground@>(Network.ClientManiaAppPlayground);
-    if (Playground is null)
+    CGameManiaAppPlayground@ CMAP = Network.ClientManiaAppPlayground;
+    if (CMAP is null)
         return;
 
-    CGamePlaygroundUIConfig@ Config = Playground.UI;
+    CGamePlaygroundUIConfig@ Config = CMAP.UI;
     if (Config is null || Config.UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
         return;
 
@@ -63,12 +63,12 @@ void Loop(CTrackMania@ App) {
     if (ServerInfo is null || !ServerInfo.CurGameModeStr.EndsWith("_Local"))
         return;
 
-    for (uint i = 0; i < Playground.UILayers.Length; i++) {
-        CGameUILayer@ Layer = Playground.UILayers[i];
+    for (uint i = 0; i < CMAP.UILayers.Length; i++) {
+        CGameUILayer@ Layer = CMAP.UILayers[i];
         if (Layer is null)
             continue;
 
-        if (Layer.ManialinkPage.Contains("EndRaceMenu")) {
+        if (string(Layer.ManialinkPage).Trim().SubStr(0, 64).StartsWith("<manialink name=\"UIModule_Campaign_EndRaceMenu")) {
             if (Layer.LocalPage is null)
                 return;
 
