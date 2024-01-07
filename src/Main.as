@@ -1,5 +1,5 @@
 // c 2023-12-30
-// m 2024-01-05
+// m 2024-01-06
 
 uint64 lastClick = 0;
 string title = "\\$F70" + Icons::Kenney::Cursor + "\\$G Click Improve";
@@ -68,7 +68,7 @@ void Loop(CTrackMania@ App) {
         if (Layer is null)
             continue;
 
-        if (string(Layer.ManialinkPage).Trim().SubStr(0, 64).StartsWith("<manialink name=\"UIModule_Campaign_EndRaceMenu")) {
+        if (string(Layer.ManialinkPage).Trim().SubStr(0, 64).Contains("_EndRaceMenu")) {
             if (Layer.LocalPage is null)
                 return;
 
