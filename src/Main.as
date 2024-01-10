@@ -1,6 +1,7 @@
 // c 2023-12-30
-// m 2024-01-06
+// m 2024-01-10
 
+bool checkingApi = false;
 uint64 lastClick = 0;
 string title = "\\$F70" + Icons::Kenney::Cursor + "\\$G Click Improve";
 string version;
@@ -18,7 +19,7 @@ bool S_ShowUI = false;
 bool S_OverrideCheck = false;
 
 void RenderMenu() {
-    if (UI::MenuItem(title + (versionSafe ? "" : "\\$AAA (disabled)"), "", S_Enabled))
+    if (UI::MenuItem(title + (versionSafe ? "" : "\\$AAA (showing UI disabled" + (checkingApi ? ", checking..." : "") + ")"), "", S_Enabled))
         S_Enabled = !S_Enabled;
 }
 
@@ -139,11 +140,11 @@ void SetUIVisibility(CTrackMania@ App, bool shown) {
 
 bool GameVersionSafe() {
     string[] knownGood = {
-        "2023-11-24_17_34"
+        "2023-11-24_17_34",
+        "2023-12-21_23_50"  // released 2024-01-09
     };
 
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    version = App.SystemPlatform.ExeVersion;
+    version = GetApp().SystemPlatform.ExeVersion;
 
     if (knownGood.Find(version) > -1)
         return true;
@@ -153,43 +154,63 @@ bool GameVersionSafe() {
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 bool GetStatusFromOpenplanet() {
-    trace("starting GetStatusFromOpenplanet");
+    checkingApi = true;
+
+    trace("GetStatusFromOpenplanet starting");
 
     Net::HttpRequest@ req = Net::HttpGet("https://openplanet.dev/plugin/clickimprove/config/version-compat");
     while (!req.Finished())
         yield();
 
-    if (req.ResponseCode() != 200) {
-        warn("GetStatusFromOpenplanet: code: " + req.ResponseCode() + "; error: " + req.Error() + "; body: " + req.String());
+    int code = req.ResponseCode();
+    if (code != 200) {
+        warn("GetStatusFromOpenplanet error: code: " + code + "; error: " + req.Error() + "; body: " + req.String());
+        checkingApi = false;
         return RetryGetStatus();
     }
 
     try {
-        Json::Value@ j = Json::Parse(req.String());
-        string myVer = Meta::ExecutingPlugin().Version;
+        string pluginVersion = Meta::ExecutingPlugin().Version;
+        Json::Value@ response = Json::Parse(req.String());
 
-        if (!j.HasKey(myVer) || j[myVer].GetType() != Json::Type::Object)
-            return false;
+        if (response.GetType() == Json::Type::Object) {
+            if (response.HasKey(pluginVersion)) {
+                if (response[pluginVersion].HasKey(version) && bool(response[pluginVersion][version])) {
+                    checkingApi = false;
+                    trace("GetStatusFromOpenplanet good");
+                    return true;
+                }  else
+                    warn("GetStatusFromOpenplanet warning: game version " + version + " not marked good with plugin version " + pluginVersion);
+            } else
+                warn("GetStatusFromOpenplanet warning: plugin version " + pluginVersion + " not specified");
+        } else
+            warn("GetStatusFromOpenplanet error: wrong JSON type received");
 
-        return j[myVer].HasKey(version);
+        checkingApi = false;
+        return false;
     } catch {
         warn("GetStatusFromOpenplanet exception: " + getExceptionInfo());
+        checkingApi = false;
         return RetryGetStatus();
     }
 }
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 bool RetryGetStatus() {
+    checkingApi = true;
+
     trace("retrying GetStatusFromOpenplanet in 1000 ms");
 
     sleep(1000);
 
     if (versionSafeRetries++ > 5) {
         warn("not retrying GetStatusFromOpenplanet anymore, too many failures");
+        checkingApi = false;
         return false;
     }
 
     trace("retrying GetStatusFromOpenplanet...");
 
-    return GameVersionSafe();
+    checkingApi = false;
+    return GetStatusFromOpenplanet();
 }
