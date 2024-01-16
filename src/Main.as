@@ -50,12 +50,16 @@ void OnSettingsChanged() {
 #endif
 
 void Loop(CTrackMania@ App) {
-    if (!S_Enabled || App.RootMap is null || App.Editor !is null)
+    if (!S_Enabled || App.RootMap is null || App.Editor !is null) {
+        // print("return 1");
         return;
+    }
 
     uint64 now = Time::Now;
-    if (now - lastClick < waitTimeMs)
+    if (now - lastClick < waitTimeMs) {
+        // print("return 2");
         return;
+    }
 
 #if TMNEXT
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
@@ -115,6 +119,67 @@ void Loop(CTrackMania@ App) {
 
             return;
         }
+    }
+
+#elif MP4
+    if (App.ActiveMenus.Length == 0) {
+        // warn("no menus!");
+        return;
+    }
+
+    CGameMenu@ Menu = App.ActiveMenus[0];
+    if (Menu is null) {
+        warn("Menu is null!");
+        return;
+    }
+
+    CGameMenuFrame@ CurrentFrame = Menu.CurrentFrame;
+    if (CurrentFrame is null) {
+        warn("CurrentFrame is null!");
+        return;
+    }
+
+    if (CurrentFrame.Id.GetName() != "FrameDialogChallengeResult") {
+        warn("not in end race menu!");
+        return;
+    }
+
+    if (CurrentFrame.Childs.Length == 0) {
+        warn("CurrentFrame has no children!");
+        return;
+    }
+
+    for (int i = CurrentFrame.Childs.Length - 1; i >= 0; i--) {
+        CControlFrame@ FrameOptionButtons = cast<CControlFrame@>(CurrentFrame.Childs[i]);
+        if (FrameOptionButtons is null)
+            continue;
+
+        string id = FrameOptionButtons.Id.GetName();
+        // print("id: " + id);
+        if (id == "FrameOptionButtons") {
+            if (FrameOptionButtons.Childs.Length == 0) {
+                warn("FrameOptionButtons has no children!");
+                return;
+            }
+
+            // print('hi');
+
+            for (uint j = 0; j < FrameOptionButtons.Childs.Length; j++) {
+                // print("j: " + j);
+                CGameControlCardGeneric@ ButtonRetry = cast<CGameControlCardGeneric@>(FrameOptionButtons.Childs[j]);
+                if (ButtonRetry !is null && ButtonRetry.Id.GetName() == "ButtonRetry") {
+                    ButtonRetry.IsFocused = true;
+                    ButtonRetry.OnAction();
+                    // print("clicked");
+                    return;
+                }
+
+                warn("ButtonRetry not found!");
+                return;
+            }
+        }
+
+        warn("FrameOptionButtons not found!");
     }
 #endif
 }
