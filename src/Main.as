@@ -1,5 +1,5 @@
 // c 2023-12-30
-// m 2024-01-10
+// m 2024-01-16
 
 bool checkingApi = false;
 uint64 lastClick = 0;
@@ -12,11 +12,15 @@ uint waitTimeMs = 100;
 [Setting category="General" name="Enabled"]
 bool S_Enabled = true;
 
+#if TMNEXT
+
 [Setting category="General" name="Try showing game UI when hidden" description="If disabled, the plugin will work when you show the UI yourself. If this doesn't work after a game update, wait for the plugin author (\\$1D4Ezio\\$G) to confirm it doesn't crash the game."]
 bool S_ShowUI = false;
 
 [Setting category="General" name="Override game version check (unsafe)" description="If you don't want to wait for the plugin author to test the current game version, try this setting. \\$FA0It may crash your game."]
 bool S_OverrideCheck = false;
+
+#endif
 
 void RenderMenu() {
     if (UI::MenuItem(title + (versionSafe ? "" : "\\$AAA (showing UI disabled" + (checkingApi ? ", checking..." : "") + ")"), "", S_Enabled))
@@ -25,7 +29,10 @@ void RenderMenu() {
 
 void Main() {
     versionSafe = GameVersionSafe();
+
+#if TMNEXT
     S_OverrideCheck = false;
+#endif
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
 
@@ -35,10 +42,12 @@ void Main() {
     }
 }
 
+#if TMNEXT
 void OnSettingsChanged() {
     if (S_OverrideCheck)
         versionSafe = true;
 }
+#endif
 
 void Loop(CTrackMania@ App) {
     if (!S_Enabled || App.RootMap is null || App.Editor !is null)
@@ -48,6 +57,7 @@ void Loop(CTrackMania@ App) {
     if (now - lastClick < waitTimeMs)
         return;
 
+#if TMNEXT
     CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
     if (Network is null)
         return;
@@ -106,9 +116,11 @@ void Loop(CTrackMania@ App) {
             return;
         }
     }
+#endif
 }
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
+#if TMNEXT
 void SetUIVisibility(CTrackMania@ App, bool shown) {
     string action = (shown ? "show" : "hid") + "ing game UI";
     trace(action);
@@ -137,8 +149,14 @@ void SetUIVisibility(CTrackMania@ App, bool shown) {
 
     trace("success " + action);
 }
+#endif
 
 bool GameVersionSafe() {
+
+#if MP4
+    return true;
+
+#elif TMNEXT
     string[] knownGood = {
         "2023-11-24_17_34",
         "2023-12-21_23_50"  // released 2024-01-09
@@ -150,7 +168,10 @@ bool GameVersionSafe() {
         return true;
 
     return GetStatusFromOpenplanet();
+#endif
 }
+
+#if TMNEXT
 
 // courtesy of "Auto-hide Opponents" plugin - https://github.com/XertroV/tm-autohide-opponents
 bool GetStatusFromOpenplanet() {
@@ -214,3 +235,5 @@ bool RetryGetStatus() {
     checkingApi = false;
     return GetStatusFromOpenplanet();
 }
+
+#endif
