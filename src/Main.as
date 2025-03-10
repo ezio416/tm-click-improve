@@ -32,7 +32,7 @@ void Main() {
         if (ServerInfo is null || !ServerInfo.CurGameModeStr.EndsWith("_Local"))
             continue;
 
-        if (ServerInfo.CurGameModeStr.Contains("Stunt")) {
+        if (ServerInfo.CurGameModeStr.Contains("Stunt") || ServerInfo.CurGameModeStr.Contains("Royal")) {
             if (Network.ClientManiaAppPlayground.UI.UISequence != CGamePlaygroundUIConfig::EUISequence::UIInteraction)
                 continue;
 
