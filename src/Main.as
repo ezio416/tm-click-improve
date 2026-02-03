@@ -1,6 +1,3 @@
-// c 2023-12-30
-// m 2025-03-10
-
 uint64        lastClick   = 0;
 const string  pluginColor = "\\$F70";
 const string  pluginIcon  = Icons::Kenney::Cursor;
