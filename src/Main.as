@@ -8,8 +8,7 @@ const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name
 bool S_Enabled = true;
 
 void Main() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-    CTrackManiaNetwork@ Network = cast<CTrackManiaNetwork@>(App.Network);
+    auto App = cast<CTrackMania>(GetApp());
 
     while (true) {
         do {
@@ -17,31 +16,41 @@ void Main() {
         } while (Time::Now - lastClick < 1000);
 
         if (false
-            || !S_Enabled
-            || App.RootMap is null
-            || App.Editor !is null
-            || Network.ClientManiaAppPlayground is null
-            || Network.ClientManiaAppPlayground.UI is null
-        )
+            or !S_Enabled
+            or App.RootMap is null
+            or App.Editor !is null
+            or App.Network.ClientManiaAppPlayground is null
+            or App.Network.ClientManiaAppPlayground.UI is null
+        ) {
             continue;
+        }
 
-        CTrackManiaNetworkServerInfo@ ServerInfo = cast<CTrackManiaNetworkServerInfo@>(Network.ServerInfo);
-        if (ServerInfo is null || !ServerInfo.CurGameModeStr.EndsWith("_Local"))
+        auto ServerInfo = cast<CTrackManiaNetworkServerInfo>(App.Network.ServerInfo);
+        if (false
+            or ServerInfo is null
+            or !ServerInfo.CurGameModeStr.EndsWith("_Local")
+        ) {
             continue;
+        }
 
-        if (ServerInfo.CurGameModeStr.Contains("Stunt") || ServerInfo.CurGameModeStr.Contains("Royal")) {
-            if (Network.ClientManiaAppPlayground.UI.UISequence != CGamePlaygroundUIConfig::EUISequence::UIInteraction)
+        if (false
+            or ServerInfo.CurGameModeStr.Contains("Stunt")
+            or ServerInfo.CurGameModeStr.Contains("Royal")
+        ) {
+            if (App.Network.ClientManiaAppPlayground.UI.UISequence != CGamePlaygroundUIConfig::EUISequence::UIInteraction) {
                 continue;
+            }
 
             MwFastBuffer<wstring> id;
             id.Add(App.LocalPlayerInfo.WebServicesUserId);
-            Network.ClientManiaAppPlayground.SendCustomEvent("StuntsResultEvent_Skip", id);
+            App.Network.ClientManiaAppPlayground.SendCustomEvent("StuntsResultEvent_Skip", id);
             yield();
 
-        } else if (Network.ClientManiaAppPlayground.UI.UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound)
+        } else if (App.Network.ClientManiaAppPlayground.UI.UISequence != CGamePlaygroundUIConfig::EUISequence::EndRound) {
             continue;
+        }
 
-        Network.ClientManiaAppPlayground.SendCustomEvent(
+        App.Network.ClientManiaAppPlayground.SendCustomEvent(
             ServerInfo.CurGameModeStr == "TM_PlayMap_Local"
                 ? "playmap-endracemenu-improve"
                 : "EndRaceMenuEvent_Improve"  // campaign, platform, stunt
@@ -55,6 +64,7 @@ void Main() {
 }
 
 void RenderMenu() {
-    if (UI::MenuItem(pluginTitle, "", S_Enabled))
+    if (UI::MenuItem(pluginTitle, "", S_Enabled)) {
         S_Enabled = !S_Enabled;
+    }
 }
